@@ -4,6 +4,11 @@ script_loading () {
   source scripts/list.sh
 }
 
+script_clean () {
+  rm -rf *.txt
+  rm -rf data.json
+}
+
 script_pr () {
   # cargando scripts adicionales
   script_loading
@@ -95,6 +100,9 @@ script_pr () {
     # guardando resultados
     echo "${r},${result_develop},${result_release},${result_staging},${result_main}" >> pullrequest.json
   done < repos.txt
+
+  # limpiando temporales
+  script_clean
 }
 
 script_checks () {
@@ -187,6 +195,144 @@ script_checks () {
 
     # guardando resultados
     echo "${r},${result_develop},${result_release},${result_staging},${result_main}" >> checks.json
+  done < repos.txt
+
+  # limpiando temporales
+  script_clean
+}
+
+
+
+
+
+
+
+
+script_inventory () {
+  # cargando scripts adicionales
+  script_loading
+
+  # generando archivo base
+  echo "repoName,repoType,repoDate,repoUser,repoOwner,repoTeam" > inventory.json
+
+  # generando lista de repositorios
+  script_list
+
+  # generando loop por repositorio
+  while read r
+  do
+
+    if [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-function" ] || [ "$(echo ${r} | cut -d"-" -f1-2)" == "crm-function" ]
+    then
+      export repoType="function"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-script" ] || [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-python" ]
+    then
+      export repoType="script"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-image" ]
+    then
+      export repoType="image"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-3)" == "matrix-infrastructure-apigateway" ] || [ "$(echo ${r} | cut -d"-" -f1-3)" == "crm-infrastructure-apigateway" ]
+    then
+      export repoType="apigateway"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-infrastructure" ]
+    then
+      export repoType="infrastructure"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-template" ]
+    then
+      export repoType="template"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-container" ]
+    then
+      export repoType="container"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "terraform-aws" ]
+    then
+      export repoType="module"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "terraform-template" ]
+    then
+      export repoType="module"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-etl" ]
+    then
+      export repoType="etl"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-3)" == "matrix-app-front" ]
+    then
+      export repoType="mobile"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-frontend" ]
+    then
+      export repoType="frontend"
+
+    elif [ "$(echo ${r} | cut -d"-" -f1-2)" == "matrix-api" ]
+    then
+      export repoType="testing"
+
+    else
+      export repoType="nodata"
+    fi
+
+    # capturando repoOwner
+    if [ "${repoType}" == "function" ] || [ "${repoType}" == "container" ] || [ "${repoType}" == "apigateway" ] || [ "${repoType}" == "etl" ] || [ "${repoType}" == "frontend" ] || [ "${repoType}" == "mobile" ]
+    then
+      export repoOwner="backend"
+
+    elif [ "${repoType}" == "image" ] || [ "${repoType}" == "script" ] || [ "${repoType}" == "template" ]
+    then
+      export repoOwner="devops"
+
+    elif [ "${repoType}" == "module" ] || [ "${repoType}" == "infrastructure" ]
+    then
+      export repoOwner="cloud"
+
+    elif [ "${repoType}" == "testing" ]
+    then
+      export repoOwner="qa"
+
+    else
+      export repoOwner="nodata"
+    fi
+
+    # capturando repoTeam
+    if [ "${repoType}" == "function" ] || [ "${repoType}" == "container" ] || [ "${repoType}" == "apigateway" ] || [ "${repoType}" == "etl" ] || [ "${repoType}" == "frontend" ] || [ "${repoType}" == "mobile" ]
+    then
+      export repoTeam="nodata"
+
+    elif [ "${repoType}" == "image" ] || [ "${repoType}" == "script" ] || [ "${repoType}" == "template" ]
+    then
+      export repoTeam="cross" # devops
+
+    elif [ "${repoType}" == "module" ] || [ "${repoType}" == "infrastructure" ]
+    then
+      export repoTeam="cross" # cloud
+
+    elif [ "${repoType}" == "testing" ]
+    then
+      export repoTeam="cross" # cloud
+
+    else
+      export repoTeam="nodata"
+    fi
+
+    # capturando usuario de creacion
+    repoUser=$(cat data/data.json | jq -r '.[] | select(.repo=="'${r}'").user')
+    
+    if [ "${repoUser}" == "" ]
+    then
+      export repoUser="nodata"
+    fi
+
+    # capturando fecha de creacion
+    repoDate=$(cat data.json | jq -r '.[] | select(.name=="'${r}'").created_at' | awk -F 'T' '{print $1}')
+
+    # guardando resultados
+    echo "${r},${repoType},${repoDate},${repoUser},${repoOwner},${repoTeam}" >> inventory.json
   done < repos.txt
 }
 
