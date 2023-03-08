@@ -6,7 +6,7 @@ script_loading () {
 
 script_clean () {
   rm -rf *.txt
-  rm -rf data.json
+  rm -rf *.json
 }
 
 script_pr () {
@@ -14,7 +14,7 @@ script_pr () {
   script_loading
 
   # generando archivo base
-  echo "Repository,develop,release,staging,main" > pullrequest.json
+  echo "Repository,develop,release,staging,main" > pullrequest.xls
 
   # generando lista de repositorios
   script_list
@@ -98,7 +98,7 @@ script_pr () {
     fi
 
     # guardando resultados
-    echo "${r},${result_develop},${result_release},${result_staging},${result_main}" >> pullrequest.json
+    echo "${r},${result_develop},${result_release},${result_staging},${result_main}" >> pullrequest.xls
   done < repos.txt
 
   # limpiando temporales
@@ -110,7 +110,7 @@ script_checks () {
   script_loading
 
   # generando archivo base
-  echo "Repository,develop,release,staging,main" > checks.json
+  echo "Repository,develop,release,staging,main" > checks.xls
 
   # generando lista de repositorios
   script_list
@@ -194,26 +194,19 @@ script_checks () {
     fi
 
     # guardando resultados
-    echo "${r},${result_develop},${result_release},${result_staging},${result_main}" >> checks.json
+    echo "${r},${result_develop},${result_release},${result_staging},${result_main}" >> checks.xls
   done < repos.txt
 
   # limpiando temporales
   script_clean
 }
 
-
-
-
-
-
-
-
 script_inventory () {
   # cargando scripts adicionales
   script_loading
 
   # generando archivo base
-  echo "repoName,repoType,repoDate,repoUser,repoOwner,repoTeam" > inventory.json
+  echo "repoName,repoType,repoDate,repoUser,repoOwner,repoTeam" > inventory.xls
 
   # generando lista de repositorios
   script_list
@@ -332,8 +325,11 @@ script_inventory () {
     repoDate=$(cat data.json | jq -r '.[] | select(.name=="'${r}'").created_at' | awk -F 'T' '{print $1}')
 
     # guardando resultados
-    echo "${r},${repoType},${repoDate},${repoUser},${repoOwner},${repoTeam}" >> inventory.json
+    echo "${r},${repoType},${repoDate},${repoUser},${repoOwner},${repoTeam}" >> inventory.xls
   done < repos.txt
+
+  # limpiando temporales
+  script_clean
 }
 
 "$@"
