@@ -1,7 +1,7 @@
 ## **Arquitectura**
 
 <p align="center">
-  <img src="docs/reports.png">
+  <img src="docs/img.png">
 </p>
 
 ## **Prerrequisitos**
