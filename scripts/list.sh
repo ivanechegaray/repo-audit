@@ -23,6 +23,22 @@ script_list () {
     # guardando resultados
     echo "$result" > repos_${page}.json
   done
+
+  # concatenando resultado
+  cat repos_*.json | jq -s 'flatten' > data.json
+  rm -rf repos_*.json
+
+  # capturando nombre de repositorios
+  REPO_LIST=$(cat data.json | jq -r .[].name)
+
+  # depurando lista
+  rm -rf repos.txt
+
+  # generando lista de repositorios
+  for r in ${REPO_LIST}
+  do
+    echo ${r} >> repos.txt
+  done
 }
 
 "$@"
